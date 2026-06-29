@@ -1,6 +1,7 @@
 # Build verification
 
-Verified on 2026-06-28 against the official QASPER train Parquet.
+Verified on 2026-06-29 against the official QASPER train Parquet and cached
+local artifacts.
 
 ## Real extraction
 
@@ -19,12 +20,18 @@ Verified on 2026-06-28 against the official QASPER train Parquet.
 - Token counts: **30 for every span**
 - Contributing papers: **877**
 
-The originally suggested 100–150-token range was diagnostically tested and retained only 5 meso examples because meso spans are first sentences. It was therefore rejected as an invalid three-way control for QASPER. Exact 30-token windows use the common support guaranteed by the normal extraction filter.
+The originally suggested 100-150-token range was diagnostically tested and
+retained only 5 meso examples because meso spans are first sentences. It was
+therefore rejected as an invalid three-way control for QASPER. Exact 30-token
+windows use the common support guaranteed by the normal extraction filter.
 
 ## Automated verification
 
-- Tests: **23 passed**
-- Total source coverage: **86.55%**
+- Required CLI: `python src/probe.py --train --eval --condition in_domain`: **PASS**
+- Length-controlled CLI: `python src/probe.py --train --eval --condition length_controlled --spans data/spans/spans_length_controlled.csv --embeddings embeddings/scibert_length_controlled.npz`: **PASS**
+- Analysis artifact generation: **PASS**
+- Tests: **27 passed**
+- Total source coverage: **83.80%**
 - Required threshold: **80%**
 
 ## Frozen embeddings
@@ -46,10 +53,19 @@ The originally suggested 100–150-token range was diagnostically tested and ret
 | Length-controlled section-name baseline | 0.7884 | 0.7850 |
 | Length-controlled majority baseline | 0.3155 | 0.1599 |
 
-Both valid conditions use 3,704 training spans and 1,068 test spans from 613 and 177 papers respectively, with no paper overlap.
+Both valid conditions use 3,704 training spans and 1,068 test spans from 613 and
+177 papers respectively, with no paper overlap.
 
-Length control reduces probe macro-F1 by **0.1055**. After length removal, the embedding probe is slightly below the section-name baseline (−0.0047 macro-F1). This is evidence that a meaningful portion of the original signal comes from length and structural/section cues; it does not support a strong claim that embeddings add abstraction signal beyond section names under this control.
+Length control reduces probe macro-F1 by **0.1055**. After length removal, the
+embedding probe is slightly below the section-name baseline (-0.0047 macro-F1).
+This is evidence that a meaningful portion of the original signal comes from
+length and structural/section cues; it does not support a strong claim that
+embeddings add abstraction signal beyond section names under this control.
 
 ## Cross-domain status
 
-Not executed: QASPER contains NLP papers only, and the dataset requirement permits one domain. A compliant optional cross-domain result requires a structured CV subset from the other approved source, `allenai/s2orc`. The pipeline fails explicitly rather than fabricating a domain split from QASPER content keywords. See `cross_domain_status.json`.
+Not executed: QASPER contains NLP papers only, and the dataset requirement
+permits one domain. A compliant optional cross-domain result requires a
+structured CV subset from the other approved source, `allenai/s2orc`. The
+pipeline fails explicitly rather than fabricating a domain split from QASPER
+content keywords. See `cross_domain_status.json`.
