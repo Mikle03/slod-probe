@@ -1,0 +1,10 @@
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+.deps/
+.modeldeps/
+.tokenizerfix/
+data/spans/*.csv
+data/spans/*.jsonl
+embeddings/*.npz

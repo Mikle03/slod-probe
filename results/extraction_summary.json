@@ -1,0 +1,44 @@
+{
+  "counts_by_label_source_rule": {
+    "meso_section_lead": 1764,
+    "macro_intro_first2": 755,
+    "micro_results_nonlead": 1038,
+    "micro_methods_nonlead": 726,
+    "macro_conclusion": 605,
+    "macro_abstract": 404
+  },
+  "counts_by_section_family": {
+    "other": 994,
+    "results": 1253,
+    "introduction": 755,
+    "evaluation": 198,
+    "methods": 1083,
+    "conclusion": 605,
+    "abstract": 404
+  },
+  "counts_by_label": {
+    "meso": 1764,
+    "macro": 1764,
+    "micro": 1764
+  },
+  "papers_contributing_to_each_class": {
+    "macro": 814,
+    "meso": 690,
+    "micro": 672
+  },
+  "dropped_no_rule": 20245,
+  "dropped_token_filter": 14336,
+  "dropped_paper_cap": 2093,
+  "dropped_class_balance": 6671,
+  "dropped_duplicate_abstract_section": 21,
+  "total_spans_saved": 5292,
+  "total_papers": 877,
+  "validation": {
+    "class_counts": {
+      "meso": 1764,
+      "macro": 1764,
+      "micro": 1764
+    },
+    "paper_count": 877
+  }
+}

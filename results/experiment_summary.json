@@ -1,0 +1,31 @@
+{
+  "model": "allenai/scibert_scivocab_uncased",
+  "representation": "mean_pooled_token_embeddings",
+  "frozen": true,
+  "labels": ["macro", "meso", "micro"],
+  "in_domain": {
+    "domain": "NLP",
+    "n_train": 3704,
+    "n_test": 1068,
+    "train_papers": 613,
+    "test_papers": 177,
+    "paper_overlap": [],
+    "embedding_probe": {"accuracy": 0.8857677902621723, "macro_f1": 0.885782697510725},
+    "section_name_baseline": {"accuracy": 0.7883895131086143, "macro_f1": 0.7849997637462467},
+    "majority_baseline": {"accuracy": 0.3155430711610487, "macro_f1": 0.15990510083036774}
+  },
+  "length_controlled": {
+    "tokens_per_span": 30,
+    "n_train": 3704,
+    "n_test": 1068,
+    "train_papers": 613,
+    "test_papers": 177,
+    "paper_overlap": [],
+    "embedding_probe": {"accuracy": 0.7790262172284644, "macro_f1": 0.7803181928236648},
+    "section_name_baseline": {"accuracy": 0.7883895131086143, "macro_f1": 0.7849997637462467},
+    "majority_baseline": {"accuracy": 0.3155430711610487, "macro_f1": 0.15990510083036774}
+  },
+  "length_control_macro_f1_delta": -0.1054645047,
+  "interpretation": "Probe performance drops materially after exact length control and no longer exceeds the section-name baseline.",
+  "cross_domain": {"status": "not_run", "reason": "QASPER is NLP-only; one domain is allowed. A compliant optional CV domain must come from allenai/s2orc."}
+}

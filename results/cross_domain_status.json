@@ -1,0 +1,7 @@
+{
+  "condition": "cross_domain",
+  "status": "not_run",
+  "train_domain": "NLP",
+  "test_domain": null,
+  "reason": "QASPER contains NLP papers only. The requirement allows one domain; a compliant optional cross-domain run would require a structured CV subset from the other approved source, allenai/s2orc. No domain was fabricated from QASPER text."
+}
