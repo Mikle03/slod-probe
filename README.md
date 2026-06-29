@@ -42,6 +42,14 @@ pip install -r requirements.txt
 
 The first [QASPER](https://huggingface.co/datasets/allenai/qasper)/SciBERT run downloads data/model weights from Hugging Face. Subsequent embedding runs use the local Hugging Face cache.
 
+This repository also includes the extracted span datasets and both precomputed SciBERT embedding caches. After installing the requirements, the requested in-domain command can therefore be run directly without regenerating artifacts:
+
+```bash
+python src/probe.py --train --eval --condition in_domain
+```
+
+See `THIRD_PARTY_NOTICES.md` for QASPER and SciBERT attribution.
+
 If installing the full `datasets` package is undesirable, download an official auto-converted QASPER Parquet split and pass `--qasper-parquet path/to/train.parquet`; this path only needs pandas and PyArrow.
 
 ## End-to-end commands
@@ -179,7 +187,7 @@ The prototype has been exercised against the official QASPER train Parquet, not 
 
 - normal corpus: 5,292 spans, exactly 1,764 per class, 877 contributing papers;
 - controlled corpus: the same 5,292 spans, exactly 30 whitespace tokens each, still 1,764 per class;
-- automated suite: 23 tests passing, 86.55% total source coverage;
+- automated suite: 24 tests passing, 90.36% total source coverage;
 - live schema fixes: Arrow-style nested arrays are supported and duplicate full-text Abstract sections are excluded from `meso`.
 
 See `results/extraction_summary.json`, `results/experiment_summary.json`, and `results/verification.md`. Real SciBERT metrics and confusion matrices are saved for the in-domain and length-controlled conditions. Cross-domain is explicitly marked unavailable because QASPER contains NLP papers only and no provenance-backed CV corpus was supplied.
