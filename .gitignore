@@ -6,3 +6,7 @@ htmlcov/
 .testdeps/
 .modeldeps/
 .tokenizerfix/
+.auditdeps/
+pip-audit.out
+pip-audit.err
+reports/
