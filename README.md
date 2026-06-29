@@ -1,33 +1,20 @@
 # SLoD Probe
 
-A reproducible prototype for testing whether **Semantic Level of Detail (SLoD)** is linearly decodable from frozen scientific-text embeddings. The pipeline uses rule-based weak supervision from document structure, extracts frozen SciBERT representations, and compares a linear embedding probe against non-embedding baselines.
+A reproducible test of whether Semantic Level of Detail (SLoD) is linearly decodable from frozen scientific-text embeddings. The project uses rule-based weak supervision from document structure, frozen SciBERT embeddings, and a logistic-regression probe.
 
-## What is tested
+## Scope and labels
 
-Labels are generated without manual annotation:
+The official Hugging Face QASPER dataset (`allenai/qasper`) supplies NLP papers. Labels are structural proxies, not human ground truth:
 
-| Label | Structural proxy | Saved rule examples |
-|---|---|---|
-| `macro` | title, abstract, first two introduction paragraphs, conclusion | `macro_title`, `macro_abstract`, `macro_intro_first2`, `macro_conclusion` |
-| `meso` | first sentence of the lead paragraph in every non-introduction/non-conclusion section | `meso_section_lead` |
-| `micro` | non-lead paragraphs in methods/approach/implementation, experiments/results, or evaluation sections | `micro_methods_nonlead`, `micro_results_nonlead` |
+| Label | Structural proxy |
+|---|---|
+| `macro` | title, abstract, first two introduction paragraphs, conclusion |
+| `meso` | first sentence of a non-introduction/non-conclusion section's lead paragraph |
+| `micro` | non-lead paragraphs in methods, approach, implementation, experiments, results, or evaluation sections |
 
-This is **weak supervision**: labels are rule-based proxies generated from section structure. They are not ground-truth human judgments of abstraction. Every row records `paper_id`, `domain`, `section_name`, `section_family`, `paragraph_index`, `label`, `label_source_rule`, `text`, `token_count`, and `row_id`.
+Every row records `paper_id`, `domain`, `section_name`, `paragraph_index`, `label`, `text`, `token_count`, `label_source_rule`, `section_family`, and `row_id`. Classes are balanced, and train/validation/test splits are made by paper to prevent leakage.
 
-## Methodological guardrails
-
-- Normal extraction uses broad whitespace-token filtering (default 30–300); this is not the length control.
-- Per-paper/per-label caps prevent one paper dominating.
-- Classes are downsampled to equal size (therefore within 10%). Production validation requires 500 examples per class and 50 papers.
-- 70/10/20 splits are made by `paper_id`, stratified by domain. A paper can occur in exactly one split.
-- The controlled corpus is a separate file and preserves `controlled_original_token_count`.
-- SciBERT is put in evaluation mode, gradients are disabled, and its weights are never updated. Representations are attention-mask-aware mean-pooled token embeddings.
-- Logistic regression is the only embedding classifier.
-- Majority and section-name-only baselines use the exact same paper split as the probe.
-
-### Domain caveat
-
-QASPER is a corpus of NLP papers; it does not supply a reliable NLP-versus-CV domain label. The default loader therefore assigns QASPER the honest domain `NLP`. This one-domain setup is valid under the stated “1–2 domains” requirement. To run the optional cross-domain condition while remaining within the approved sources, add a normalized CV subset derived specifically from `allenai/s2orc`, with an explicit `domain: "CV"`. The code refuses a cross-domain run when two genuine allowed-source domain values are unavailable.
+QASPER does not provide a reliable NLP-versus-CV label, so this repository honestly treats it as one NLP domain. Cross-domain evaluation is N/A unless a provenance-backed second allowed domain is supplied.
 
 ## Setup
 
@@ -35,168 +22,116 @@ Python 3.10+ is recommended.
 
 ```bash
 python -m venv .venv
-# Windows
-.venv\Scripts\activate
-pip install -r requirements.txt
 ```
 
-The first [QASPER](https://huggingface.co/datasets/allenai/qasper)/SciBERT run downloads data/model weights from Hugging Face. Subsequent embedding runs use the local Hugging Face cache.
+Windows PowerShell:
 
-This repository also includes the extracted span datasets and both precomputed SciBERT embedding caches. After installing the requirements, the requested in-domain command can therefore be run directly without regenerating artifacts:
+```powershell
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+```
+
+The repository includes extracted datasets and both SciBERT embedding caches, so the required command runs without downloading QASPER or SciBERT:
 
 ```bash
 python src/probe.py --train --eval --condition in_domain
 ```
 
-See `THIRD_PARTY_NOTICES.md` for QASPER and SciBERT attribution.
+## Run every stage
 
-If installing the full `datasets` package is undesirable, download an official auto-converted QASPER Parquet split and pass `--qasper-parquet path/to/train.parquet`; this path only needs pandas and PyArrow.
+Run commands from the repository root.
 
-## End-to-end commands
+### 1. Extract and split QASPER spans
 
-Run from the repository root.
-
-### 1. Extract QASPER spans
+This network-backed stage downloads QASPER on its first run.
 
 ```bash
-python src/dataset.py \
-  --qasper-split train \
-  --domain NLP \
-  --output data/spans/spans.jsonl \
-  --summary results/extraction_summary.json \
-  --splits data/spans/paper_splits.json \
-  --min-tokens 30 --max-tokens 300 \
-  --max-spans-per-paper-per-label 12 \
-  --min-per-class 500 --min-papers 50 --seed 42
+python src/dataset.py --qasper-split train --domain NLP --output data/spans/spans.jsonl --summary results/extraction_summary.json --splits data/spans/paper_splits.json --min-tokens 30 --max-tokens 300 --max-spans-per-paper-per-label 12 --min-per-class 500 --min-papers 50 --seed 42
 ```
 
-This also saves `data/spans/spans.csv`. The extraction summary includes counts by rule and section family, dropped-no-rule/token-filter/cap/class-balancing/duplicate-abstract counts, and papers contributing to every class. Full-text Abstract sections are excluded because the canonical abstract is already emitted as `macro`. Validation fails loudly if requirements are unmet. `--allow-small` exists only for development fixtures.
-
-Normalized input JSONL may be used instead of Hugging Face:
-
-```json
-{"paper_id":"cv-001","domain":"CV","title":"...","abstract":"...","sections":[{"name":"Methods","paragraphs":["Lead...","Detail..."]}]}
-```
-
-```bash
-python src/dataset.py --input-jsonl data/cv_papers.jsonl --domain CV
-```
+It also writes `data/spans/spans.csv`. Full-text Abstract sections are excluded because the canonical abstract is emitted separately.
 
 ### 2. Create the separate length control
 
 ```bash
-python src/controls.py \
-  --input data/spans/spans.csv \
-  --output data/spans/spans_length_controlled.csv \
-  --min-tokens 30 --max-tokens 30 --target-tokens 30 --seed 42
+python src/controls.py --input data/spans/spans.csv --output data/spans/spans_length_controlled.csv --min-tokens 30 --max-tokens 30 --target-tokens 30 --seed 42
 ```
 
-Random contiguous windows are deterministic. QASPER's meso spans are first sentences, so a 100–150-token control leaves almost no meso examples. The evidence-based default therefore uses the common support of the extracted classes: all eligible spans are represented by exactly 30 whitespace tokens. Wider ranges remain configurable for corpora whose meso spans are longer.
+The assignment suggests 100-150 tokens as an example. QASPER meso spans are first sentences, so that range leaves almost no meso examples. The implemented control therefore uses the classes' common support: a deterministic contiguous window of exactly 30 whitespace tokens. It is a valid fixed-length control, but results should not be described as a 100-150-token experiment.
 
 ### 3. Extract frozen embeddings
 
-```bash
-python src/embed.py \
-  --input data/spans/spans.csv \
-  --output embeddings/scibert_spans.npz \
-  --model allenai/scibert_scivocab_uncased --batch-size 16
+These network-backed commands download SciBERT on their first run:
 
-python src/embed.py \
-  --input data/spans/spans_length_controlled.csv \
-  --output embeddings/scibert_length_controlled.npz
+```bash
+python src/embed.py --input data/spans/spans.csv --output embeddings/scibert_spans.npz --model allenai/scibert_scivocab_uncased --batch-size 16
+python src/embed.py --input data/spans/spans_length_controlled.csv --output embeddings/scibert_length_controlled.npz --model allenai/scibert_scivocab_uncased --batch-size 16
 ```
 
-The compressed cache stores `embeddings`, aligned `row_ids`, and model name. CPU execution is supported; pass `--device cuda` when available.
+SciBERT is placed in evaluation mode, gradients and parameter updates are disabled, and token vectors are attention-mask-aware mean pooled.
 
-### 4. Train and evaluate
-
-Requested runnable form:
+### 4. Train and evaluate probes
 
 ```bash
 python src/probe.py --train --eval --condition in_domain --domain NLP
+python src/probe.py --train --eval --condition length_controlled --domain NLP --spans data/spans/spans_length_controlled.csv --embeddings embeddings/scibert_length_controlled.npz
+python src/controls.py --normal-metrics results/in_domain_metrics.json --controlled-metrics results/length_controlled_metrics.json
 ```
 
-Explicit forms:
+Each probe run also evaluates majority-class and section-name-only baselines on the same paper split and writes confusion-matrix CSV files.
 
-```bash
-python src/probe.py --train --eval --condition in_domain \
-  --domain NLP --spans data/spans/spans.csv \
-  --embeddings embeddings/scibert_spans.npz
-
-python src/probe.py --train --eval --condition cross_domain \
-  --train-domain NLP --test-domain CV \
-  --spans data/spans/spans.csv --embeddings embeddings/scibert_spans.npz
-
-python src/probe.py --train --eval --condition length_controlled \
-  --domain NLP --spans data/spans/spans_length_controlled.csv \
-  --embeddings embeddings/scibert_length_controlled.npz
-```
-
-Compare the normal and controlled probe automatically:
-
-```bash
-python src/controls.py \
-  --normal-metrics results/in_domain_metrics.json \
-  --controlled-metrics results/length_controlled_metrics.json
-```
-
-This writes `results/length_control_comparison.json` with both macro-F1 values, their delta, and a `drops`, `stays_same`, or `improves` interpretation (default tolerance: 0.01).
-
-Generate the Part 3 qualitative analysis, t-SNE visualization, and technical report:
+### 5. Generate analysis artifacts
 
 ```bash
 python src/analysis.py --output-dir results/analysis
-python src/report.py
 ```
 
-The final report is available as `reports/technical_report.md` and a visually verified four-page `reports/technical_report.pdf`. The analysis directory contains 18 qualitative examples (three high-confidence correct and three failed predictions per class), confusion-pair counts, t-SNE coordinates, and the embedding-space plot.
+This writes 18 qualitative examples (three correct and three failed examples for each true class), confusion-pair counts, t-SNE coordinates, and the t-SNE plot. Technical-report drafts are intentionally excluded from this repository; the author keeps them separately as local writing references.
 
-Each run saves a metrics JSON plus confusion-matrix CSVs for:
-
-1. frozen-embedding logistic-regression probe;
-2. majority-class baseline (no embeddings);
-3. section-name-only TF-IDF + logistic-regression baseline (no text or embeddings).
-
-Reported fields are accuracy, macro-F1, per-class precision/recall/F1/support, confusion matrix, label order, sample/paper counts, and a paper-overlap diagnostic (must be empty).
-
-## Tests
+### 6. Run tests
 
 ```bash
-python -m pytest -q --cov=src --cov-report=term-missing --cov-fail-under=80
+python -m pytest tests -q --cov=src --cov-report=term-missing --cov-fail-under=80
 ```
 
-Tests cover weak-label precedence/metadata, drop accounting, caps and balancing, deterministic disjoint splits, non-destructive length control, padding-safe mean pooling, metrics, baselines, and corpus validation.
+## Results
 
-## Project layout
+| Condition/model | Accuracy | Macro-F1 |
+|---|---:|---:|
+| Frozen SciBERT probe | 0.8858 | 0.8858 |
+| Length-controlled probe | 0.7790 | 0.7803 |
+| Majority baseline | 0.3155 | 0.1599 |
+| Section-name baseline | 0.7884 | 0.7850 |
 
-```text
-slod-probe/
-├── README.md
-├── requirements.txt
-├── src/
-│   ├── dataset.py
-│   ├── embed.py
-│   ├── probe.py
-│   ├── controls.py
-│   └── utils.py
-├── data/spans/
-├── embeddings/
-├── results/
-├── notebooks/analysis.ipynb
-└── tests/
-```
+Length control reduces macro-F1 by about 0.1055. Controlled performance remains above majority, but is slightly below the section-name baseline. The cautious conclusion is that SLoD is strongly linearly decodable under these weak structural labels; this experiment does not establish a pure abstraction representation independent of length and document structure. Cross-domain generalization cannot be inferred.
 
-## Interpretation
+## Artifact map
 
-High in-domain probe performance alone does not establish encoded abstraction. Compare it with the section-name baseline, cross-domain transfer, and the separately embedded length-controlled condition. A large drop after length control indicates reliance on length; performance close to the section baseline suggests structural/topic leakage; robust cross-domain performance above both baselines is stronger evidence for linearly accessible SLoD signal.
+- Datasets and splits: `data/spans/`
+- Cached embeddings: `embeddings/`
+- Metrics, confusion matrices, summaries, and verification notes: `results/`
+- Qualitative examples, confusion pairs, t-SNE coordinates, and plot: `results/analysis/`
+- Optional executable walkthrough: `notebooks/analysis.ipynb`
+- Source modules: `src/`
+- Tests: `tests/`
+- AI disclosure: `AI_USAGE.md`
+- Dataset/model attribution: `THIRD_PARTY_NOTICES.md`
 
-## Verified build status
+See `results/extraction_summary.json`, `results/experiment_summary.json`, and `results/verification.md` for saved evidence.
 
-The prototype has been exercised against the official QASPER train Parquet, not only synthetic fixtures:
+## Verified corpus
 
-- normal corpus: 5,292 spans, exactly 1,764 per class, 877 contributing papers;
-- controlled corpus: the same 5,292 spans, exactly 30 whitespace tokens each, still 1,764 per class;
-- automated suite: 27 tests passing with 83.80% core-source coverage;
-- live schema fixes: Arrow-style nested arrays are supported and duplicate full-text Abstract sections are excluded from `meso`.
+- 5,292 spans from 877 papers
+- 1,764 examples each for macro, meso, and micro
+- separate controlled corpus with the same rows and exactly 30 whitespace tokens each
+- cached normal and controlled embeddings, each shaped `(5292, 768)`
+- cross-domain status explicitly recorded as unavailable
 
-See `results/extraction_summary.json`, `results/experiment_summary.json`, and `results/verification.md`. Real SciBERT metrics and confusion matrices are saved for the in-domain and length-controlled conditions. Cross-domain is explicitly marked unavailable because QASPER contains NLP papers only and no provenance-backed CV corpus was supplied.
+Part 1, the literature review, was completed separately and is outside this implementation repository. Its AI-use context is disclosed in `AI_USAGE.md`.
