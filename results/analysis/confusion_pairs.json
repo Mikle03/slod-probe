@@ -1,0 +1,32 @@
+[
+  {
+    "true": "micro",
+    "predicted": "macro",
+    "count": 38
+  },
+  {
+    "true": "macro",
+    "predicted": "micro",
+    "count": 23
+  },
+  {
+    "true": "micro",
+    "predicted": "meso",
+    "count": 23
+  },
+  {
+    "true": "meso",
+    "predicted": "micro",
+    "count": 17
+  },
+  {
+    "true": "macro",
+    "predicted": "meso",
+    "count": 15
+  },
+  {
+    "true": "meso",
+    "predicted": "macro",
+    "count": 6
+  }
+]

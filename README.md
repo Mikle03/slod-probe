@@ -142,6 +142,15 @@ python src/controls.py \
 
 This writes `results/length_control_comparison.json` with both macro-F1 values, their delta, and a `drops`, `stays_same`, or `improves` interpretation (default tolerance: 0.01).
 
+Generate the Part 3 qualitative analysis, t-SNE visualization, and technical report:
+
+```bash
+python src/analysis.py --output-dir results/analysis
+python src/report.py
+```
+
+The final report is available as `reports/technical_report.md` and a visually verified four-page `reports/technical_report.pdf`. The analysis directory contains 18 qualitative examples (three high-confidence correct and three failed predictions per class), confusion-pair counts, t-SNE coordinates, and the embedding-space plot.
+
 Each run saves a metrics JSON plus confusion-matrix CSVs for:
 
 1. frozen-embedding logistic-regression probe;
@@ -187,7 +196,7 @@ The prototype has been exercised against the official QASPER train Parquet, not 
 
 - normal corpus: 5,292 spans, exactly 1,764 per class, 877 contributing papers;
 - controlled corpus: the same 5,292 spans, exactly 30 whitespace tokens each, still 1,764 per class;
-- automated suite: 24 tests passing, 90.36% total source coverage;
+- automated suite: 27 tests passing with 83.80% core-source coverage;
 - live schema fixes: Arrow-style nested arrays are supported and duplicate full-text Abstract sections are excluded from `meso`.
 
 See `results/extraction_summary.json`, `results/experiment_summary.json`, and `results/verification.md`. Real SciBERT metrics and confusion matrices are saved for the in-domain and length-controlled conditions. Cross-domain is explicitly marked unavailable because QASPER contains NLP papers only and no provenance-backed CV corpus was supplied.

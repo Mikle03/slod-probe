@@ -3,5 +3,6 @@ __pycache__/
 .coverage
 htmlcov/
 .deps/
+.testdeps/
 .modeldeps/
 .tokenizerfix/
