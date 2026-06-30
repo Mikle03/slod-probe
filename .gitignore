@@ -9,4 +9,6 @@ htmlcov/
 .auditdeps/
 pip-audit.out
 pip-audit.err
-reports/
+reports/*
+!reports/literature_summary.pdf
+!reports/technical_report.pdf

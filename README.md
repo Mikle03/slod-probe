@@ -105,7 +105,7 @@ The collector stores a manifest containing the source, query, access date, and s
 python src/analysis.py --output-dir results/analysis
 ```
 
-This writes 18 qualitative examples (three correct and three failed examples for each true class), confusion-pair counts, t-SNE coordinates, and the t-SNE plot. Separate biomedical predictions, examples, coordinates, and a t-SNE plot are stored under `results/analysis/`. Technical-report drafts are intentionally excluded from this repository; the author keeps them separately as local writing references.
+This writes 18 qualitative examples (three correct and three failed examples for each true class), confusion-pair counts, t-SNE coordinates, and the t-SNE plot. Separate biomedical predictions, examples, coordinates, and a t-SNE plot are stored under `results/analysis/`.
 
 ### 7. Run tests
 
@@ -134,6 +134,8 @@ Length control reduces macro-F1 by about 0.1055. The external biomedical probe r
 - Optional executable walkthrough: `notebooks/analysis.ipynb`
 - Source modules: `src/`
 - Tests: `tests/`
+- Literature summary: `reports/literature_summary.pdf`
+- Technical report: `reports/technical_report.pdf`
 - AI disclosure: `AI_USAGE.md`
 - Dataset/model attribution: `THIRD_PARTY_NOTICES.md`
 
@@ -149,4 +151,4 @@ See `results/extraction_summary.json`, `results/experiment_summary.json`, and `r
 - cached PMC embeddings shaped `(1500, 768)`
 - completed cross-domain external evaluation with no QASPER/PMC paper overlap
 
-Part 1, the literature review, was completed separately and is outside this implementation repository. Its AI-use context is disclosed in `AI_USAGE.md`.
+The final literature summary and technical report are included under `reports/`. Their AI-use context is disclosed in `AI_USAGE.md`.
