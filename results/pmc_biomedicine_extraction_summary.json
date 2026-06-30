@@ -1,0 +1,69 @@
+{
+  "counts_by_label_source_rule": {
+    "micro_methods_nonlead": 119,
+    "macro_intro_first2": 244,
+    "meso_section_lead": 500,
+    "micro_results_nonlead": 381,
+    "macro_abstract": 95,
+    "macro_conclusion": 161
+  },
+  "counts_by_section_family": {
+    "methods": 141,
+    "introduction": 244,
+    "other": 412,
+    "results": 417,
+    "abstract": 95,
+    "conclusion": 161,
+    "evaluation": 30
+  },
+  "counts_by_label": {
+    "micro": 500,
+    "macro": 500,
+    "meso": 500
+  },
+  "papers_contributing_to_each_class": {
+    "macro": 184,
+    "meso": 179,
+    "micro": 143
+  },
+  "dropped_no_rule": 5358,
+  "dropped_token_filter": 3075,
+  "dropped_paper_cap": 516,
+  "dropped_class_balance": 0,
+  "dropped_duplicate_abstract_section": 0,
+  "total_spans_saved": 1500,
+  "total_papers": 197,
+  "source": "NCBI PMC Open Access BioC API",
+  "domain": "biomedicine",
+  "purpose": "external_cross_domain_test_only",
+  "access_date": "2026-06-30",
+  "papers_fetched_successfully": 197,
+  "failed_papers": [
+    {
+      "paper_id": "PMC13269674",
+      "error": "Failed to fetch https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC13269674/unicode: Expecting value: line 1 column 2 (char 1)"
+    },
+    {
+      "paper_id": "PMC13270988",
+      "error": "Failed to fetch https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC13270988/unicode: Expecting value: line 1 column 2 (char 1)"
+    },
+    {
+      "paper_id": "PMC13270257",
+      "error": "Failed to fetch https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC13270257/unicode: Expecting value: line 1 column 2 (char 1)"
+    },
+    {
+      "paper_id": "PMC13270353",
+      "error": "Failed to fetch https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC13270353/unicode: Expecting value: line 1 column 2 (char 1)"
+    },
+    {
+      "paper_id": "PMC13271533",
+      "error": "Failed to fetch https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC13271533/unicode: Expecting value: line 1 column 2 (char 1)"
+    },
+    {
+      "paper_id": "PMC13269661",
+      "error": "Failed to fetch https://www.ncbi.nlm.nih.gov/research/bionlp/RESTful/pmcoa.cgi/BioC_json/PMC13269661/unicode: Expecting value: line 1 column 2 (char 1)"
+    }
+  ],
+  "target_per_class": 500,
+  "max_spans_per_paper_per_label": 5
+}

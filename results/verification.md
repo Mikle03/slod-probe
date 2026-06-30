@@ -1,7 +1,7 @@
 # Build verification
 
-Verified on 2026-06-29 against the official QASPER train Parquet and cached
-local artifacts.
+Verified on 2026-06-30 against the official QASPER train Parquet, the NCBI PMC
+Open Access BioC API, and cached local artifacts.
 
 ## Real extraction
 
@@ -30,8 +30,9 @@ windows use the common support guaranteed by the normal extraction filter.
 - Required CLI: `python src/probe.py --train --eval --condition in_domain`: **PASS**
 - Length-controlled CLI: `python src/probe.py --train --eval --condition length_controlled --spans data/spans/spans_length_controlled.csv --embeddings embeddings/scibert_length_controlled.npz`: **PASS**
 - Analysis artifact generation: **PASS**
-- Tests: **27 passed**
-- Total source coverage: **83.80%**
+- PMC BioC collection and cross-domain CLI: **PASS**
+- Tests: **36 passed**
+- Total source coverage: **85.31%**
 - Required threshold: **80%**
 
 ## Frozen embeddings
@@ -40,6 +41,7 @@ windows use the common support guaranteed by the normal extraction filter.
 - Representation: attention-mask-aware mean pooling
 - Normal cache: **(5,292, 768)**
 - Controlled cache: **(5,292, 768)**
+- PMC biomedical cache: **(1,500, 768)**
 - Fine-tuning: **none** (`eval`, gradients disabled, inference mode)
 
 ## Real probe results
@@ -52,6 +54,9 @@ windows use the common support guaranteed by the normal extraction filter.
 | Length-controlled SciBERT probe | 0.7790 | 0.7803 |
 | Length-controlled section-name baseline | 0.7884 | 0.7850 |
 | Length-controlled majority baseline | 0.3155 | 0.1599 |
+| Cross-domain biomedical SciBERT probe | 0.8240 | 0.8237 |
+| Cross-domain biomedical section-name baseline | 0.8300 | 0.8267 |
+| Cross-domain biomedical majority baseline | 0.3333 | 0.1667 |
 
 Both valid conditions use 3,704 training spans and 1,068 test spans from 613 and
 177 papers respectively, with no paper overlap.
@@ -62,10 +67,24 @@ This is evidence that a meaningful portion of the original signal comes from
 length and structural/section cues; it does not support a strong claim that
 embeddings add abstraction signal beyond section names under this control.
 
-## Cross-domain status
+## External cross-domain verification
 
-Not executed: QASPER contains NLP papers only, and the dataset requirement
-permits one domain. A compliant optional cross-domain result requires a
-structured CV subset from the other approved source, `allenai/s2orc`. The
-pipeline fails explicitly rather than fabricating a domain split from QASPER
-content keywords. See `cross_domain_status.json`.
+- Train: unchanged QASPER NLP training split, **3,704 spans / 613 papers**
+- Test: PMC BioC biomedicine, **1,500 spans / 197 papers**
+- Test balance: **500 macro / 500 meso / 500 micro**
+- PMC span length: **30–300 tokens**
+- Maximum contribution: **5 spans per paper per label**
+- Paper overlap: **none**
+- Biomedical labels or embeddings used for fitting/tuning: **none**
+- Qualitative examples: **18** (three correct and three failed per true class)
+- Biomedical t-SNE: **900 points** (300 per class)
+
+Cross-domain macro-F1 is **0.8237**, approximately 0.0620 below in-domain and
+far above majority. It is approximately tied with and slightly below the
+section-name baseline (0.8267). This demonstrates substantial external transfer
+of the weak structural SLoD signal, but not abstraction independent of section
+structure. Because both domain and source corpus change (QASPER to PMC BioC),
+the condition measures combined domain-and-corpus transfer. PMC BioC is an
+additional open biomedical source outside the core QASPER/S2ORC dataset
+requirement. See `cross_domain_status.json` and
+`cross_domain_biomedicine_summary.md`.

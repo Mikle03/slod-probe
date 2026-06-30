@@ -1,0 +1,19 @@
+{
+  "in_domain_qasper_nlp": {
+    "accuracy": 0.8857677902621723,
+    "macro_f1": 0.885782697510725
+  },
+  "length_controlled_qasper_nlp": {
+    "accuracy": 0.7790262172284644,
+    "macro_f1": 0.7803181928236648
+  },
+  "cross_domain_qasper_nlp_to_pmc_biomedicine": {
+    "accuracy": 0.824,
+    "macro_f1": 0.823739402052655,
+    "majority_macro_f1": 0.16666666666666666,
+    "section_name_macro_f1": 0.8266833924865579
+  },
+  "cross_domain_minus_in_domain_macro_f1": -0.06204329545807001,
+  "cross_domain_minus_length_controlled_macro_f1": 0.0434212092289902,
+  "interpretation": "The frozen SciBERT probe transfers substantially above the majority baseline, but its cross-domain macro-F1 is approximately tied with and slightly below the section-name baseline. The condition changes both domain and source corpus, so it measures combined domain-and-corpus transfer."
+}

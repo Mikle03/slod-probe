@@ -53,13 +53,14 @@ do you need any additional information?
 
 ## What was accepted or modified
 
-AI-assisted code and prose were reviewed and modified where necessary. Important project decisions included treating structural labels as weak proxies, splitting data by paper ID, using frozen SciBERT embeddings with attention-mask-aware mean pooling, reporting cross-domain evaluation as unavailable rather than fabricating a second domain, and using a separate fixed-length control dataset.
+AI-assisted code and prose were reviewed and modified where necessary. Important project decisions included treating structural labels as weak proxies, splitting data by paper ID, using frozen SciBERT embeddings with attention-mask-aware mean pooling, using a separate fixed-length control dataset, and initially reporting cross-domain evaluation as unavailable rather than fabricating a QASPER domain. A later extension added a separately sourced PMC BioC biomedical external test set and explicitly treated the result as combined domain-and-corpus transfer.
 
 ## Verification performed
 
 - Checked the extracted-data schema, class counts, paper counts, token lengths, and paper-level split disjointness.
 - Re-ran the in-domain and length-controlled probes from cached artifacts.
 - Verified metric files, confusion matrices, qualitative examples, and t-SNE artifacts.
+- Collected and audited a balanced PMC BioC external test set, verified its manifest and per-paper caps, and evaluated the unchanged QASPER-trained probe without biomedical adaptation.
 - Ran the automated test suite and source-coverage check.
 - Reviewed the README, CLI commands, cached embeddings, limitations, and GitHub contents.
 - Kept the technical-report draft outside the public GitHub repository for manual rewriting.

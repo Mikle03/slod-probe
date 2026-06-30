@@ -4,7 +4,7 @@ A reproducible test of whether Semantic Level of Detail (SLoD) is linearly decod
 
 ## Scope and labels
 
-The official Hugging Face QASPER dataset (`allenai/qasper`) supplies NLP papers. Labels are structural proxies, not human ground truth:
+The official Hugging Face QASPER dataset (`allenai/qasper`) supplies the primary NLP corpus. A separate external test set uses structured open-access biomedical papers from the NCBI PMC BioC API. Labels are structural proxies, not human ground truth:
 
 | Label | Structural proxy |
 |---|---|
@@ -14,7 +14,7 @@ The official Hugging Face QASPER dataset (`allenai/qasper`) supplies NLP papers.
 
 Every row records `paper_id`, `domain`, `section_name`, `paragraph_index`, `label`, `text`, `token_count`, `label_source_rule`, `section_family`, and `row_id`. Classes are balanced, and train/validation/test splits are made by paper to prevent leakage.
 
-QASPER does not provide a reliable NLP-versus-CV label, so this repository honestly treats it as one NLP domain. Cross-domain evaluation is N/A unless a provenance-backed second allowed domain is supplied.
+QASPER is treated as one NLP domain. Cross-domain evaluation trains only on the QASPER NLP training split and tests, without adaptation, on 1,500 balanced PMC biomedical spans from 197 papers. Because both domain and source corpus change (QASPER to PMC BioC), this is explicitly reported as an external combined domain-and-corpus transfer test rather than a perfectly isolated domain shift. PMC BioC is an additional open biomedical source, not QASPER or S2ORC.
 
 ## Setup
 
@@ -38,7 +38,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-The repository includes extracted datasets and both SciBERT embedding caches, so the required command runs without downloading QASPER or SciBERT:
+The repository includes extracted datasets and all three SciBERT embedding caches (normal QASPER, length-controlled QASPER, and PMC biomedical), so the required command runs without downloading QASPER or SciBERT:
 
 ```bash
 python src/probe.py --train --eval --condition in_domain
@@ -87,15 +87,27 @@ python src/controls.py --normal-metrics results/in_domain_metrics.json --control
 
 Each probe run also evaluates majority-class and section-name-only baselines on the same paper split and writes confusion-matrix CSV files.
 
-### 5. Generate analysis artifacts
+### 5. Build and evaluate the external biomedical domain
+
+The following commands collect structured PMC BioC papers, create a balanced external test set, embed it with the same frozen SciBERT model, and evaluate the QASPER-trained probe without adapting it to PMC labels:
+
+```bash
+python src/biomedicine.py --per-class 500 --min-papers 100 --max-spans-per-paper-per-label 5
+python src/embed.py --input data/spans/pmc_biomedicine_spans.csv --output embeddings/scibert_pmc_biomedicine.npz --model allenai/scibert_scivocab_uncased --batch-size 16
+python src/cross_domain.py
+```
+
+The collector stores a manifest containing the source, query, access date, and selected PMC IDs. The saved cache allows cross-domain evaluation to be reproduced without repeating the network-backed collection or embedding stages.
+
+### 6. Generate analysis artifacts
 
 ```bash
 python src/analysis.py --output-dir results/analysis
 ```
 
-This writes 18 qualitative examples (three correct and three failed examples for each true class), confusion-pair counts, t-SNE coordinates, and the t-SNE plot. Technical-report drafts are intentionally excluded from this repository; the author keeps them separately as local writing references.
+This writes 18 qualitative examples (three correct and three failed examples for each true class), confusion-pair counts, t-SNE coordinates, and the t-SNE plot. Separate biomedical predictions, examples, coordinates, and a t-SNE plot are stored under `results/analysis/`. Technical-report drafts are intentionally excluded from this repository; the author keeps them separately as local writing references.
 
-### 6. Run tests
+### 7. Run tests
 
 ```bash
 python -m pytest tests -q --cov=src --cov-report=term-missing --cov-fail-under=80
@@ -107,10 +119,11 @@ python -m pytest tests -q --cov=src --cov-report=term-missing --cov-fail-under=8
 |---|---:|---:|
 | Frozen SciBERT probe | 0.8858 | 0.8858 |
 | Length-controlled probe | 0.7790 | 0.7803 |
-| Majority baseline | 0.3155 | 0.1599 |
-| Section-name baseline | 0.7884 | 0.7850 |
+| Cross-domain QASPER NLP → PMC biomedicine probe | 0.8240 | 0.8237 |
+| Cross-domain majority baseline | 0.3333 | 0.1667 |
+| Cross-domain section-name baseline | 0.8300 | 0.8267 |
 
-Length control reduces macro-F1 by about 0.1055. Controlled performance remains above majority, but is slightly below the section-name baseline. The cautious conclusion is that SLoD is strongly linearly decodable under these weak structural labels; this experiment does not establish a pure abstraction representation independent of length and document structure. Cross-domain generalization cannot be inferred.
+Length control reduces macro-F1 by about 0.1055. The external biomedical probe reaches 0.8237 macro-F1, 0.0620 below the in-domain result and far above its majority baseline. However, it is approximately tied with and slightly below the biomedical section-name baseline. The cautious conclusion is that weak SLoD labels transfer across NLP and biomedical papers, but the evidence does not isolate a pure abstraction representation independent of length, section structure, or corpus preprocessing.
 
 ## Artifact map
 
@@ -128,10 +141,12 @@ See `results/extraction_summary.json`, `results/experiment_summary.json`, and `r
 
 ## Verified corpus
 
-- 5,292 spans from 877 papers
+- Primary QASPER corpus: 5,292 spans from 877 papers
 - 1,764 examples each for macro, meso, and micro
 - separate controlled corpus with the same rows and exactly 30 whitespace tokens each
 - cached normal and controlled embeddings, each shaped `(5292, 768)`
-- cross-domain status explicitly recorded as unavailable
+- external PMC biomedical test: 1,500 spans from 197 papers, exactly 500 per class
+- cached PMC embeddings shaped `(1500, 768)`
+- completed cross-domain external evaluation with no QASPER/PMC paper overlap
 
 Part 1, the literature review, was completed separately and is outside this implementation repository. Its AI-use context is disclosed in `AI_USAGE.md`.
